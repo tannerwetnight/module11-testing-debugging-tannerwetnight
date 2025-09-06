@@ -32,17 +32,26 @@ public with sharing class LeadTriggerHandler {
 	 */
 	public static void handleTitleNormalization(List<Lead> leadsToNormalize) {
 		for (Lead ld : leadsToNormalize) {
-			if (ld.title == 'vp' || ld.title.contains('v.p.') || ld.title.contains('vice president')) {
-				ld.Title = 'Vice President';
+			if (ld.Title == null) {
+				return;
 			} else if (
+				ld.title.contains('vp') || 
+				ld.title.contains('v.p.') || 
+				ld.title.contains('vice president')) {
+				ld.Title = 'Vice President';
+			}else if (
 				ld.title.contains('mgr') ||
 				ld.title.contains('manage') ||
 				ld.title.contains('head of department')
 			) {
 				ld.Title = 'Manager';
-			} else if (ld.title.contains('exec') || ld.title == 'chief' || ld.title.contains('head')) {
+			} else if (ld.title.contains('exec') || 
+					   ld.title.contains('chief') || 
+					   ld.title.contains('head')) {
 				ld.Title = 'Executive';
-			} else if (ld.title.contains('assist') || ld.title.contains('deputy') || ld.title == 'jr') {
+			} else if (ld.title.contains('assist') || 
+					   ld.title.contains('deputy') || 
+					   ld.title.contains('jr')) {
 				ld.Title = 'Assistant';
 			}
 		}
@@ -61,21 +70,24 @@ public with sharing class LeadTriggerHandler {
 	 */
 	public static void handleAutoLeadScoring(List<Lead> leadsToScore) {
 		for (Lead ld : leadsToScore) {
-			Integer score = 10;
-
+			Integer score = 0;
+			
 			// Check and add points based on the specified conditions
 			if (ld.LeadSource == 'Website' && ld.Email != null) {
-				score = 3;
+				score += 3;
 			}
 
 			if (ld.Phone != null) {
-				score = 5;
+				score += 5;
 			}
 
 			if (ld.Industry == 'Technology') {
-				score = 10;
+				score += 10;
 			}
-
+			
+			if (score > 18) {
+				score = 18;
+			} 
 			ld.Lead_Score__c = score; // Set the computed score back to the lead
 		}
 	}
@@ -107,12 +119,14 @@ public with sharing class LeadTriggerHandler {
 		// Step 1: Gather all lead emails
         Map<Id,String> leadToEmailMap = new Map<Id,String>();
 		for (Lead lead : leads) {
-			leadToEmailMap.put(lead.Id, lead.Email);
+			if (!lead.IsConverted && String.isNotBlank(lead.Email)) {
+				leadToEmailMap.put(lead.Id, lead.Email);
+			}
 		}
 
 		// Step 2: Find matching contacts based on email
 		Map<String, Contact> emailToContactMap = new Map<String, Contact>();
-		for (Contact c : [SELECT Id, Email, AccountId FROM Contact WHERE Email IN :leadToEmailMap.values()]) {
+		for (Contact c : [SELECT Id, Email, AccountId FROM Contact WHERE Email IN :leadToEmailMap.values() AND Email != null]) {
 			if (!emailToContactMap.containsKey(c.Email)) {
 				emailToContactMap.put(c.Email, c);
 			} else {
