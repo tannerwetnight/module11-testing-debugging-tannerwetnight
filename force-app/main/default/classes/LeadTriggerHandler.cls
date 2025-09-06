@@ -14,6 +14,7 @@
  * https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_dml_convertLead.htm
  * https://developer.salesforce.com/docs/atlas.en-us.apexref.meta/apexref/apex_methods_system_test.htm
  */
+//test git push
 public with sharing class LeadTriggerHandler {
 	/* 
 	 * Question 1
@@ -151,7 +152,7 @@ public with sharing class LeadTriggerHandler {
 				leadConverts.add(lc);
 			}
 		}
-
+//test git push
 		if (!leadConverts.isEmpty()) {
 			List<Database.LeadConvertResult> lcrs = Database.convertLead(leadConverts);
 		}
